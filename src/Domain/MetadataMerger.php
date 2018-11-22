@@ -8,6 +8,8 @@ class MetadataMerger
 {
     public function merge(ClassMetadata $reference, ClassMetadata $redundancy)
     {
+
+
         $notSupported = array(
             'customGeneratorDefinition',
             'customRepositoryClassName',
@@ -24,6 +26,11 @@ class MetadataMerger
 
         foreach ($notSupported as $property) {
             if ($reference->$property != $redundancy->$property) {
+
+                if (preg_match('/MVB/', $redundancy->name)) {
+                    continue;
+                }
+
                 throw new Exception\UnsupportedException(sprintf('"%s" mapping property changed on table "%s", not supported', $property, $redundancy->getTableName()));
             }
         }
@@ -42,8 +49,10 @@ class MetadataMerger
     {
         $referenceMappings  = $reference->fieldMappings;
         $redundancyMappings = $redundancy->fieldMappings;
+        $redundancyMappings = array_map('array_filter', $redundancyMappings);
 
         foreach (array_intersect_key($referenceMappings, $redundancyMappings) as $key => $val) {
+
             // theses Mappings have to be removed since references will change.
             unset($referenceMappings[$key]['declared'], $referenceMappings[$key]['inherited'], $referenceMappings[$key]['originalClass']);
             unset($redundancyMappings[$key]['declared'], $redundancyMappings[$key]['inherited'], $redundancyMappings[$key]['originalClass']);
