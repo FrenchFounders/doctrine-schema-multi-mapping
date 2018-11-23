@@ -8,8 +8,6 @@ class MetadataMerger
 {
     public function merge(ClassMetadata $reference, ClassMetadata $redundancy)
     {
-
-
         $notSupported = array(
             'customGeneratorDefinition',
             'customRepositoryClassName',
@@ -58,15 +56,24 @@ class MetadataMerger
             unset($redundancyMappings[$key]['declared'], $redundancyMappings[$key]['inherited'], $redundancyMappings[$key]['originalClass']);
 
             if ($referenceMappings[$key] != $redundancyMappings[$key]) {
-                throw new Exception\LogicException(sprintf('Field mapping "%s" changed on table "%s"', $key, $redundancy->getTableName()));
+
+                if (count($referenceMappings[$key]) > count($redundancyMappings[$key])) {
+                    $redundancyMappings[$key] = array_merge($redundancyMappings[$key], array_diff($referenceMappings[$key], $redundancyMappings[$key]));
+                } elseif (count($redundancyMappings[$key]) > count($referenceMappings[$key])) {
+                    $referenceMappings[$key] = array_merge($referenceMappings[$key], array_diff($redundancyMappings[$key], $referenceMappings[$key]));
+                }
+
+                if ($referenceMappings[$key] != $redundancyMappings[$key]) {
+                    throw new Exception\LogicException(sprintf('Field mapping "%s" changed on table "%s"', $key, $redundancy->getTableName()));
+                }
             }
         }
     }
 
     private function guardFieldNamesConsistency(ClassMetadata $reference, ClassMetadata $redundancy)
     {
-        $referenceFields  = $reference->fieldNames;
-        $redundancyFields = $redundancy->fieldNames;
+        $referenceFields  = $reference->columnNames;
+        $redundancyFields = $redundancy->columnNames;
 
         foreach (array_intersect_key($referenceFields, $redundancyFields) as $key => $val) {
             if ($referenceFields[$key] != $redundancyFields[$key]) {
