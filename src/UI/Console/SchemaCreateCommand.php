@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class SchemaCreateCommand extends CreateSchemaDoctrineCommand
 {
@@ -51,12 +52,13 @@ EOT
         $em        = $this->getHelper('em')->getEntityManager();
         $factory   = new MetadataFactory();
         $metadatas = $factory->getAllMetadata($em);
+        $ui        = new SymfonyStyle($input, $output);
 
         if ( ! empty($metadatas)) {
             // Create SchemaTool
             $tool = new SchemaTool($em);
 
-            return $this->executeSchemaCommand($input, $output, $tool, $metadatas);
+            return $this->executeSchemaCommand($input, $output, $tool, $metadatas, $ui);
         } else {
             $output->writeln('No Metadata Classes to process.');
             return 0;
