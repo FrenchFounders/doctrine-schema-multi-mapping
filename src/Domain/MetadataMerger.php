@@ -58,9 +58,9 @@ class MetadataMerger
             if ($referenceMappings[$key] != $redundancyMappings[$key]) {
 
                 if (count($referenceMappings[$key]) > count($redundancyMappings[$key])) {
-                    $redundancyMappings[$key] = array_merge($redundancyMappings[$key], array_diff($referenceMappings[$key], $redundancyMappings[$key]));
+                    $redundancyMappings[$key] = array_merge($redundancyMappings[$key], $this->arrayDiffRecursive($referenceMappings[$key], $redundancyMappings[$key]));
                 } elseif (count($redundancyMappings[$key]) > count($referenceMappings[$key])) {
-                    $referenceMappings[$key] = array_merge($referenceMappings[$key], array_diff($redundancyMappings[$key], $referenceMappings[$key]));
+                    $referenceMappings[$key] = array_merge($referenceMappings[$key], $this->arrayDiffRecursive($redundancyMappings[$key], $referenceMappings[$key]));
                 }
 
                 if ($referenceMappings[$key] != $redundancyMappings[$key]) {
@@ -80,5 +80,25 @@ class MetadataMerger
                 throw new Exception\LogicException(sprintf('Field name "%s" changed on table "%s"', $key, $redundancy->getTableName()));
             }
         }
+    }
+
+    private function arrayDiffRecursive($aArray1, $aArray2) {
+        $aReturn = array();
+
+        foreach ($aArray1 as $mKey => $mValue) {
+            if (array_key_exists($mKey, $aArray2)) {
+                if (is_array($mValue)) {
+                    $aRecursiveDiff = $this->arrayDiffRecursive($mValue, $aArray2[$mKey]);
+                    if (count($aRecursiveDiff)) { $aReturn[$mKey] = $aRecursiveDiff; }
+                } else {
+                    if ($mValue != $aArray2[$mKey]) {
+                        $aReturn[$mKey] = $mValue;
+                    }
+                }
+            } else {
+                $aReturn[$mKey] = $mValue;
+            }
+        }
+        return $aReturn;
     }
 }
