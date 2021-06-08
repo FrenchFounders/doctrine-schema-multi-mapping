@@ -25,7 +25,7 @@ class MetadataMerger
         foreach ($notSupported as $property) {
             if ($reference->$property != $redundancy->$property) {
 
-                if (preg_match('/MVB/', $redundancy->name)) {
+                if (preg_match('/MVB/', $reference->name) || preg_match('/MVB/', $redundancy->name)) {
                     continue;
                 }
 
